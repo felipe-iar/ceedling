@@ -1,0 +1,101 @@
+# =========================================================================
+#   Ceedling - Test-Centered Build System for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2010-26 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
+
+#
+# Loaded from lib/
+# ----------------
+#
+
+file_wrapper:
+
+yaml_wrapper:
+
+ruby_expandinator:
+
+config_walkinator:
+
+system_wrapper:
+
+verbosinator:
+
+reportinator:
+
+rake_task_registry:
+
+loginator:
+  compose:
+    - verbosinator
+    - file_wrapper
+    - system_wrapper
+
+#
+# Loaded from bin/
+# ----------------
+#
+
+actions_wrapper:
+
+# Separation of logic from CLI user interface
+cli_handler:
+  compose:
+    - configinator
+    - projectinator
+    - cli_helper
+    - path_validator
+    - rake_task_registry
+    - actions_wrapper
+    - loginator
+
+cli_helper:
+  compose:
+    - file_wrapper
+    - config_walkinator
+    - path_validator
+    - actions_wrapper
+    - rake_task_registry
+    - loginator
+    - reportinator
+    - system_wrapper
+    - ruby_expandinator
+
+path_validator:
+  compose:
+    - file_wrapper
+    - loginator
+
+mixinator:
+  compose:
+    - mixin_standardizer
+    - merginator
+    - path_validator
+    - yaml_wrapper
+    - loginator
+
+mixin_standardizer:
+  compose:
+    - reportinator
+
+merginator:
+  compose:
+    - reportinator
+
+projectinator:
+  compose:
+    - file_wrapper
+    - path_validator
+    - yaml_wrapper
+    - loginator
+    - system_wrapper
+    - ruby_expandinator
+
+configinator:
+  compose:
+    - config_walkinator
+    - projectinator
+    - mixinator
+
+
