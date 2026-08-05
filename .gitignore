@@ -1,3 +1,12 @@
 **/*.o
 **/*.out
 **/build/test/
+
+# MyProject build / IDE artifacts
+MyProject/build/
+MyProject/Debug/
+MyProject/settings/
+MyProject/*.o
+MyProject/*.log
+MyProject/*.bak
+

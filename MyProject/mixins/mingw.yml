@@ -1,0 +1,18 @@
+# =========================================================================
+# Mixin: MinGW (host GCC)
+# Usage:  ceedling --mixin=mingw test:all
+# With Coco: ceedling --mixin=mingw --mixin=coco_mingw test:all
+#
+# Relies on Ceedling's default gcc toolchain (must be on PATH).
+# =========================================================================
+---
+:project:
+  :build_root: build/mingw
+
+:extension:
+  :executable: .exe
+
+:flags:
+  :test:
+    :compile:
+      - -Wall

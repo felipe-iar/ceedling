@@ -1,0 +1,70 @@
+# =========================================================================
+# Mixin: IAR Embedded Workbench for Arm (iccarm / ilinkarm / CSpyBat)
+# Usage:  ceedling --mixin=iar test:all
+# With Coco: ceedling --mixin=iar --mixin=coco_iar test:all
+#
+# Windows host install (adjust if your IAR location differs):
+#   C:\iar\ewarmc-10.10.1\
+#
+# Executables use absolute paths so Ceedling tool validation does not depend
+# on PATH ordering (Ceedling may validate before :environment :path is applied).
+# =========================================================================
+---
+:project:
+  :build_root: build/iar
+
+:extension:
+  :executable: .out
+
+:flags:
+  :release:
+    :compile:
+      - -Oh
+  :test:
+    :compile:
+      - -On
+      - --debug
+      - --dlib_config=full
+      - -DTEST
+
+:tools:
+  :test_compiler:
+    :executable: C:/iar/ewarmc-10.10.1/arm/bin/iccarm.exe
+    :name: 'IAR C/C++ Compiler for Arm'
+    :arguments:
+      - --silent
+      - --no_wrap_diagnostics
+      - --endian=little
+      - --cpu=cortex-m4
+      - -e
+      - -I"$": COLLECTION_PATHS_TEST_SUPPORT_SOURCE_INCLUDE_VENDOR
+      - '"${1}"'
+      - -o "${2}"
+
+  :test_linker:
+    :name: 'IAR ILINK Linker for Arm'
+    :executable: C:/iar/ewarmc-10.10.1/arm/bin/ilinkarm.exe
+    :arguments:
+      - --silent
+      - --semihosting
+      - --no_wrap_diagnostics
+      # Map next to the linked image so iar and iar_coco build_roots both work.
+      # (Mixin tool :arguments are merged/appended — do not re-list them in coco_iar.yml.)
+      - --map
+      - ${2}.map
+      - -o
+      - ${2}
+      - ${1}
+
+  :test_fixture:
+    :name: 'CSpyBat test runner'
+    :executable: C:/iar/ewarmc-10.10.1/common/bin/CSpyBat.exe
+    :arguments:
+      - C:/iar/ewarmc-10.10.1/arm/bin/armproc.dll
+      - C:/iar/ewarmc-10.10.1/arm/bin/armsim2.dll
+      - --plugin=C:/iar/ewarmc-10.10.1/arm/bin/armLibsupportUniversal.dll
+      - --debug_file=${1}
+      - --silent
+      - --backend
+      - --cpu=cortex-m4
+      - --semihosting

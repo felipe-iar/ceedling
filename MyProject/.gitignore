@@ -1,0 +1,23 @@
+# Build outputs (per-toolchain roots live under build/)
+/build/
+/Debug/
+/settings/
+
+# Local compiler leftovers
+*.o
+*.out
+*.map
+*.csexe
+*.csmes
+*.pass
+*.fail
+
+# IAR Embedded Workbench project files (local IDE)
+*.ewd
+*.ewp
+*.ewt
+*.eww
+
+# Local backups / logs
+*.bak
+*.log

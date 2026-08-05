@@ -1,0 +1,65 @@
+# =========================================================================
+# Mixin: Squish Coco coverage on top of IAR
+# Usage:  ceedling --mixin=iar --mixin=coco_iar test:all
+#
+# Compiler/linker are Coco's IAR wrappers (absolute paths). CSpyBat stays the
+# real IAR runner from iar.yml.
+#
+# IMPORTANT: Do not re-specify :tools :test_linker :arguments here. Ceedling
+# appends mixin tool arguments onto the base mixin, which duplicated --map/-o
+# and made ilinkarm fail ("Option --map does not match previous occurrence").
+# CSpy then kept running a stale .out — printf from Demo.c appeared, but new
+# setUp/custom-IO code in newer .o files never made it into the image.
+#
+# :path is only set here (not in iar.yml) because Ceedling forbids duplicate
+# :environment :path entries. The wrappers still need the real IAR binaries
+# on PATH to locate native iccarm/ilinkarm.
+#
+# Needs --ruby-replacement (enabled in ceedling.bat) for "#{ENV['PATH']}".
+#
+# .csexe under CSpy (IAR + Coco only — MinGW unchanged):
+#   1) tools/coco_abs_shim/iccarm.* absolutizes sources (avoids src/src/... in .csmes)
+#   2) test/support/coco_stdout_io.* dumps report to stdout between
+#      ===COCO_CSEXE_BEGIN/END=== (gated on __ICCARM__ + __COVERAGESCANNER__)
+#   3) post_test_fixture_execute scrapes Ceedling's .pass/.fail into
+#      <exe>.csexe, then cmcsexeimport merges it into <exe>.csmes
+#   https://doc.qt.io/coco/customizing-i-o-of-coveragescanner-library.html
+# =========================================================================
+---
+:project:
+  :build_root: build/iar_coco
+
+:plugins:
+  :enabled:
+    - command_hooks
+
+:environment:
+  # Instrument application code; exclude Unity (instrumented Unity + IAR often fails to emit .o).
+  - :COVERAGESCANNER_ARGS: '--cs-on --cs-mcdc --cs-output=%A --cs-exclude-file-abs-wildcard=*/unity.c --cs-exclude-file-abs-wildcard=*/unity.h --cs-exclude-file-abs-wildcard=*/unity_internals.h'
+  - :path:
+    - 'C:/iar/ewarmc-10.10.1/arm/bin'
+    - 'C:/iar/ewarmc-10.10.1/common/bin'
+    - 'C:/Installations/squishcoco'
+    - "#{ENV['PATH']}"
+
+# Compiler is the absolutizing shim (not Coco's iccarm.exe directly), because
+# relative paths like "src/Demo.c" become doubled in the .csmes (src/src/Demo.c).
+# Linker stays the Coco wrapper; it only sees .o files.
+:tools:
+  :test_compiler:
+    :executable: tools/coco_abs_shim/iccarm.bat
+    :name: 'Coco iccarm (absolute source paths)'
+
+  :test_linker:
+    :executable: C:/Installations/squishcoco/IAR/ARM/ilinkarm.exe
+    :name: 'Coco CoverageScanner (ilinkarm)'
+
+# After each CSpy run: scrape stdout markers -> .csexe, then cmcsexeimport.
+:command_hooks:
+  :post_test_fixture_execute:
+    :executable: ruby
+    :name: 'Extract CSpy .csexe and import into .csmes'
+    :arguments:
+      - tools/cspy_extract_csexe.rb
+      - '${1}'
+    :logging: TRUE

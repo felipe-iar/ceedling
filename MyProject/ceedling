@@ -6,4 +6,5 @@
 #   SPDX-License-Identifier: MIT
 # =========================================================================
 
-ruby vendor/ceedling/bin/ceedling $*
+# --ruby-replacement allows "#{ENV['PATH']}" (and similar) in mixins
+ruby vendor/ceedling/bin/ceedling --ruby-replacement "$@"

@@ -1,0 +1,55 @@
+# =========================================================================
+# Mixin: Squish Coco coverage on top of MinGW
+# Usage:  ceedling --mixin=mingw --mixin=coco_mingw test:all
+#
+# Ceedling replaces PATH with the :path list below (it does not prepend).
+# Order matters for the native toolchain used BY the Coco wrapper:
+#   1) Native MinGW bin -> real gcc/cc1
+#   2) Host PATH        -> keep the rest of the environment
+#
+# Compiler/linker are the absolutizing shim (not PATH "gcc.exe"), because
+# Ceedling invokes "gcc.exe" explicitly and would skip a gcc.bat on PATH.
+# Relative paths like "src/Demo.c" become doubled in the .csmes
+# (src/src/Demo.c); CoverageBrowser then finds no real files and looks empty.
+#
+# Step 2 needs --ruby-replacement (enabled in ceedling.bat).
+# =========================================================================
+---
+:project:
+  :build_root: build/mingw_coco
+
+:plugins:
+  :enabled:
+    - command_hooks
+
+:environment:
+  # --cs-mcdc enables MC/DC. --cs-output=%A puts .csexe next to the linked exe.
+  - :COVERAGESCANNER_ARGS: '--cs-on --cs-mcdc --cs-output=%A'
+  - :path:
+    - 'C:/Qt/Tools/mingw1310_64/bin'
+    - "#{ENV['PATH']}"
+
+# Override only the executable; Ceedling default gcc arguments are kept.
+:tools:
+  :test_compiler:
+    :executable: tools/coco_abs_shim/gcc.bat
+    :name: 'Coco gcc (absolute source paths)'
+  :test_linker:
+    :executable: tools/coco_abs_shim/gcc.bat
+    :name: 'Coco gcc linker'
+
+# After each test run, merge .csexe into .csmes (${1} = test executable path).
+:command_hooks:
+  :post_test_fixture_execute:
+    :executable: cmcsexeimport
+    :name: 'Import Coco .csexe into .csmes'
+    :arguments:
+      - -m
+      - '${1}.csmes'
+      - -e
+      - '${1}.csexe'
+      - -t
+      - '${1}'
+      - -P
+      - -v
+    :logging: TRUE
