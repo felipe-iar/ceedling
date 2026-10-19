@@ -99,13 +99,13 @@
 :paths:
   :test:
     - +:test/**
-    - -:test/support
+#    - -:test/support
   :source:
     - src/**
   :include:
     - src/** # In simple projects, this entry often duplicates :source
   :support:
-    - test/support
+#    - test/support
   :libraries: []
 
 # You can even specify specific files to add or remove from your test
@@ -321,7 +321,7 @@
       - --silent
       - --semihosting
       - --no_wrap_diagnostics
-      - --map 'build/test/out/tests.map'
+      - --map 'build/test/out'
       - -o '${2}'
       - '${1}'
 #     :optional: FALSE
